@@ -12,12 +12,13 @@ use App\Domain\WorkEntry\Entity\WorkEntry;
 class UserDtoMapper
 {
 
-    public function toDTO(User $user): UserDto
+    public function toDTO(User $user, string $totalTime): UserDto
     {
         return new UserDto(
             (string) $user->getId(),
             $user->getName(),
-            $this->mapWorkEntries($user->getWorkEntries()->toArray())
+            $this->mapWorkEntries($user->getWorkEntries()->toArray()),
+            $totalTime
         );
     }
 

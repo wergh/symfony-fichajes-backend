@@ -23,9 +23,9 @@ readonly class DoctrineWorkEntryReadRepository implements WorkEntryReadRepositor
     public function all(string $userId): array
     {
         return $this->entityManager->createQueryBuilder()
-            ->select('we')
-            ->from(WorkEntry::class, 'we')
-            ->where('we.user = :userId')
+            ->select('w')
+            ->from(WorkEntry::class, 'w')
+            ->where('w.user = :userId')
             ->setParameter('userId', $userId)
             ->getQuery()
             ->getResult();
@@ -45,6 +45,7 @@ readonly class DoctrineWorkEntryReadRepository implements WorkEntryReadRepositor
             ->from(WorkEntry::class, 'w')
             ->where('w.user = :userId')
             ->andWhere('w.endDate IS NULL')
+            ->andWhere('w.deletedAt IS NULL')
             ->setParameter('userId', $userId)
             ->setMaxResults(1)
             ->getQuery()
@@ -58,6 +59,7 @@ readonly class DoctrineWorkEntryReadRepository implements WorkEntryReadRepositor
             ->from(WorkEntry::class, 'w')
             ->where('w.user = :userId')
             ->andWhere('w.endDate <= :startDate')
+            ->andWhere('w.deletedAt IS NULL')
             ->orderBy('w.endDate', 'DESC')
             ->setMaxResults(1)
             ->setParameter('userId', $userId)
@@ -73,11 +75,28 @@ readonly class DoctrineWorkEntryReadRepository implements WorkEntryReadRepositor
             ->from(WorkEntry::class, 'w')
             ->where('w.user = :userId')
             ->andWhere('w.startDate >= :endDate')
+            ->andWhere('w.deletedAt IS NULL')
             ->orderBy('w.startDate', 'ASC')
             ->setMaxResults(1)
             ->setParameter('userId', $userId)
             ->setParameter('endDate', $endDate)
             ->getQuery()
             ->getOneOrNullResult();
+    }
+
+    public function getWorkEntriesForToday(string $userId): array
+    {
+        return $this->entityManager->createQueryBuilder()
+            ->select('w')
+            ->from(WorkEntry::class, 'w')
+            ->where('w.user = :userId')
+            ->andWhere('w.startDate >= :startOfDay')
+            ->andWhere('w.startDate <= :endOfDay')
+            ->andWhere('w.deletedAt IS NULL')
+            ->setParameter('userId', $userId)
+            ->setParameter('startOfDay', (new \DateTimeImmutable('today'))->setTime(0, 0))
+            ->setParameter('endOfDay', (new \DateTimeImmutable('tomorrow'))->setTime(0, 0)->modify('-1 second'))
+            ->getQuery()
+            ->getResult();
     }
 }

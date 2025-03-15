@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Api\Controller\User;
 
 use App\Application\Mapper\User\UserDtoMapper;
+use App\Application\UseCase\User\GetTodayWorkHoursForUserUseCase;
 use App\Application\UseCase\User\GetUserByIdUseCase;
 use App\Domain\Shared\Exceptions\EntityNotFoundException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -21,7 +22,8 @@ class GetUserByIdController extends AbstractController
     public function __construct(
         private readonly GetUserByIdUseCase $getUserByIdUseCase,
         private readonly UserDtoMapper $userDTOMapper,
-        private readonly SerializerInterface $serializer
+        private readonly SerializerInterface $serializer,
+        private readonly GetTodayWorkHoursForUserUseCase $getTodayWorkHoursForUserUseCase
     ) {}
 
     #[Route('/user/{id}', methods: ['GET'])]
@@ -33,7 +35,9 @@ class GetUserByIdController extends AbstractController
             return new JsonResponse(['errors' => $e->getMessage()], Response::HTTP_NOT_FOUND);
         }
 
-        $userDTO = $this->userDTOMapper->toDTO($user);
+        $totalTime = $this->getTodayWorkHoursForUserUseCase->execute($user);
+
+        $userDTO = $this->userDTOMapper->toDTO($user, $totalTime);
 
 
         return new JsonResponse(

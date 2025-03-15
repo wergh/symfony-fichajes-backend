@@ -20,4 +20,6 @@ interface WorkEntryReadRepositoryInterface
     public function findPreviousWorkEntry(string $userId, DateTimeImmutable $startDate): ?WorkEntry;
 
     public function findNextWorkEntry(string $userId, DateTimeImmutable $endDate): ?WorkEntry;
+
+    public function getWorkEntriesForToday(string $userId): array;
 }
