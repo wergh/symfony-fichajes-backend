@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                  https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="App\Domain\User\Entity\User" table="users">
+        <id name="id" type="user_id" column="id">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="name" type="string" length="255" nullable="false" />
+        <field name="createdAt" type="datetime_immutable" column="created_at" nullable="false" />
+        <field name="updatedAt" type="datetime_immutable" column="updated_at" nullable="false" />
+        <field name="deletedAt" type="datetime_immutable" column="deleted_at" nullable="true" />
+
+        <one-to-many field="workEntries" target-entity="App\Domain\WorkEntry\Entity\WorkEntry" mapped-by="user" fetch="EXTRA_LAZY">
+            <cascade>
+                <cascade-persist/>
+                <cascade-remove/>
+            </cascade>
+            <order-by>
+                <order-by-field name="startDate" direction="DESC" />
+            </order-by>
+        </one-to-many>
+
+        <one-to-many field="updatedWorkEntryLogs" target-entity="App\Domain\WorkEntry\Entity\WorkEntryLog" mapped-by="updatedBy" fetch="EXTRA_LAZY">
+            <order-by>
+                <order-by-field name="startTime" direction="DESC" />
+            </order-by>
+        </one-to-many>
+
+        <lifecycle-callbacks>
+            <lifecycle-callback type="preUpdate" method="markAsUpdated"/>
+        </lifecycle-callbacks>
+    </entity>
+
+</doctrine-mapping>
