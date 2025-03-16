@@ -21,7 +21,7 @@ final class CreateUserUseCase
     {
     }
 
-    public function execute(CreateUserCommand $command): void
+    public function execute(CreateUserCommand $command): User
     {
         $this->validator->validate($command);
 
@@ -31,6 +31,8 @@ final class CreateUserUseCase
         );
 
         $this->userWriteRepository->save($user);
+
+        return $user;
 
     }
 }

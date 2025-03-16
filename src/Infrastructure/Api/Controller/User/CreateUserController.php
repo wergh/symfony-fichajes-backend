@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Api\Controller\User;
 
 use App\Application\Command\User\CreateUserCommand;
+use App\Application\Mapper\User\UserDtoMapper;
 use App\Application\UseCase\User\CreateUserUseCase;
 use App\Infrastructure\Api\Request\User\CreateUserRequest;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -22,6 +23,7 @@ class CreateUserController extends AbstractController
 {
 
     public function __construct(
+        private readonly UserDtoMapper $userDtoMapper,
         private readonly CreateUserUseCase $createUserUseCase,
         private readonly SerializerInterface $serializer,
         private readonly ValidatorInterface $validator,
@@ -43,13 +45,14 @@ class CreateUserController extends AbstractController
 
         try {
             $command = new CreateUserCommand($createUserRequest->getName());
-            $this->createUserUseCase->execute($command);
+            $user = $this->createUserUseCase->execute($command);
         } catch (ValidationFailedException $e) {
             return new JsonResponse(['errors' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         }
 
+        $userDTO = $this->userDtoMapper->toDTO($user, '00:00:00');
 
-        return new JsonResponse(['message' => 'User created successfully'], Response::HTTP_CREATED);
+        return new JsonResponse(['message' => 'User created successfully', 'data' => $userDTO], Response::HTTP_CREATED);
     }
 
 }

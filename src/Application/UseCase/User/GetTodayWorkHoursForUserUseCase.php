@@ -9,16 +9,16 @@ use App\Domain\User\Entity\User;
 use App\Domain\WorkEntry\Repository\WorkEntryReadRepositoryInterface;
 use DateTimeImmutable;
 
-final class GetTodayWorkHoursForUserUseCase
+final readonly class GetTodayWorkHoursForUserUseCase
 {
 
     public function __construct(
-        private readonly WorkEntryReadRepositoryInterface $workEntryReadRepository,
+        private WorkEntryReadRepositoryInterface $workEntryReadRepository,
     )
     {
     }
 
-    public function execute(User $user)
+    public function execute(User $user): string
     {
         $workEntries = $this->workEntryReadRepository->getWorkEntriesForToday((string) $user->getId());
 
