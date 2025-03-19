@@ -30,9 +30,9 @@ class DeleteWorkEntryController extends AbstractController
         try {
             $this->deleteWorkEntryUseCase->execute($userId, $workEntryId);
         } catch (EntityNotFoundException $e) {
-            return new JsonResponse(['errors' => $e->getMessage()], Response::HTTP_NOT_FOUND);
+            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
         } catch (UnauthorizedAccessToWorkEntry $e) {
-            return new JsonResponse(['errors' => $e->getMessage()], Response::HTTP_UNAUTHORIZED);
+            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_UNAUTHORIZED);
         }
 
         return new JsonResponse(['message' => 'Work Entry deleted successfully'], Response::HTTP_OK);

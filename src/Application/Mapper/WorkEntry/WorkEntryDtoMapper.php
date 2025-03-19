@@ -15,8 +15,8 @@ class WorkEntryDtoMapper
     {
         return new WorkEntryDto(
             (string) $workEntry->getId(),
-            $workEntry->getStartDate(),
-            $workEntry->getEndDate(),
+            $workEntry->getStartDate()->format('Y-m-d H:i:s'),
+            ($workEntry->getEndDate()) ? $workEntry->getEndDate()->format('Y-m-d H:i:s') : null,
         );
     }
 }

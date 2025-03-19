@@ -6,6 +6,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Api\Controller\WorkEntry;
 
 use App\Application\Command\WorkEntry\UpdateWorkEntryCommand;
+use App\Application\Mapper\WorkEntry\WorkEntryDtoMapper;
 use App\Application\UseCase\WorkEntry\UpdateWorkEntryUseCase;
 use App\Domain\Shared\Exceptions\EntityNotFoundException;
 use App\Domain\User\Exception\EndDateInTheFutureNotAllowed;
@@ -18,6 +19,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\Messenger\Exception\ExceptionInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Exception\ValidationFailedException;
@@ -26,10 +28,13 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 #[AsController]
 class UpdateWorkEntryController extends AbstractController
 {
+
     public function __construct(
         private readonly UpdateWorkEntryUseCase $updateWorkEntryUseCase,
-        private readonly SerializerInterface $serializer,
-        private readonly ValidatorInterface $validator
+        private readonly SerializerInterface    $serializer,
+        private readonly ValidatorInterface     $validator,
+        private readonly WorkEntryDtoMapper     $workEntryDtoMapper
+
     )
     {
     }
@@ -47,7 +52,7 @@ class UpdateWorkEntryController extends AbstractController
         $errors = $this->validator->validate($updateWorkEntryRequest);
 
         if (count($errors) > 0) {
-            return new JsonResponse(['errors' => (string) $errors], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(['errors' => (string)$errors], Response::HTTP_BAD_REQUEST);
         }
 
         try {
@@ -58,15 +63,18 @@ class UpdateWorkEntryController extends AbstractController
                 $updateWorkEntryRequest->getEndDateAsDateTimeImmutable()
             );
 
-            $this->updateWorkEntryUseCase->execute($command);
+            $workEntry = $this->updateWorkEntryUseCase->execute($command);
         } catch (ValidationFailedException|WorkEntryIsAlreadyOpenException|NotOverlapException|EndDateInTheFutureNotAllowed $e) {
-            return new JsonResponse(['errors' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         } catch (EntityNotFoundException $e) {
-            return new JsonResponse(['errors' => $e->getMessage()], Response::HTTP_NOT_FOUND);
+            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
         } catch (UnauthorizedAccessToWorkEntry $e) {
-            return new JsonResponse(['errors' => $e->getMessage()], Response::HTTP_FORBIDDEN);
+            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_FORBIDDEN);
+        } catch (ExceptionInterface $e) {
+            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return new JsonResponse(['message' => 'Work entry updated successfully'], Response::HTTP_OK);
+        $workEntryDto = $this->workEntryDtoMapper->toDTO($workEntry);
+        return new JsonResponse(['message' => 'Work entry updated successfully', 'data' => $workEntryDto], Response::HTTP_OK);
     }
 }

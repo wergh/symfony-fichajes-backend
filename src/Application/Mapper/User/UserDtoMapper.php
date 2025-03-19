@@ -12,10 +12,10 @@ use App\Domain\WorkEntry\Entity\WorkEntry;
 class UserDtoMapper
 {
 
-    public function toDTO(User $user, string $totalTime): UserDto
+    public function toDTO(User $user, int $totalTime = 0): UserDto
     {
         return new UserDto(
-            (string) $user->getId(),
+            (string)$user->getId(),
             $user->getName(),
             $this->mapWorkEntries($user->getWorkEntries()->toArray()),
             $totalTime
@@ -24,7 +24,8 @@ class UserDtoMapper
 
     private function mapWorkEntries(array $workEntries): array
     {
-        return array_map(fn (WorkEntry $entry) => [
+        return array_map(fn(WorkEntry $entry) => [
+            'id' => (string) $entry->getId(),
             'startDate' => $entry->getStartDate()->format('Y-m-d H:i:s'),
             'endDate' => ($entry->getEndDate()) ? $entry->getEndDate()->format('Y-m-d H:i:s') : null,
         ], $workEntries);

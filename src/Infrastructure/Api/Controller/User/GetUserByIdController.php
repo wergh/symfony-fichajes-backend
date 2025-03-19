@@ -22,7 +22,6 @@ class GetUserByIdController extends AbstractController
     public function __construct(
         private readonly GetUserByIdUseCase $getUserByIdUseCase,
         private readonly UserDtoMapper $userDTOMapper,
-        private readonly SerializerInterface $serializer,
         private readonly GetTodayWorkHoursForUserUseCase $getTodayWorkHoursForUserUseCase
     ) {}
 
@@ -41,10 +40,8 @@ class GetUserByIdController extends AbstractController
 
 
         return new JsonResponse(
-            $this->serializer->serialize($userDTO, 'json'),
+            ['message' => 'User retrieved successfully', 'data' => $userDTO],
             Response::HTTP_OK,
-            [],
-            true
         );
     }
 }

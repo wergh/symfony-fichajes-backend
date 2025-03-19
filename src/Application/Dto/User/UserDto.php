@@ -11,7 +11,7 @@ class UserDto
         public readonly string $id,
         public readonly string $name,
         public readonly array  $workEntries,
-        public readonly string $totalTime,
+        public readonly int    $totalTime,
     )
     {
     }

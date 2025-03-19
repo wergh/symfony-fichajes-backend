@@ -7,6 +7,7 @@ namespace App\Application\UseCase\WorkEntry;
 
 use App\Application\UseCase\User\GetUserByIdUseCase;
 use App\Domain\Shared\Exceptions\EntityNotFoundException;
+use App\Domain\WorkEntry\Entity\WorkEntry;
 use App\Domain\WorkEntry\Exception\NotWorkEntryOpenException;
 use App\Domain\WorkEntry\Exception\UnauthorizedAccessToWorkEntry;
 use App\Domain\WorkEntry\Repository\WorkEntryReadRepositoryInterface;
@@ -20,17 +21,15 @@ final readonly class CloseWorkEntryUseCase
         private GetUserByIdUseCase                $getUserByIdUseCase,
         private WorkEntryReadRepositoryInterface  $workEntryReadRepository,
         private WorkEntryWriteRepositoryInterface $workEntryWriteRepository,
-        private WorkEntryDomainService            $workEntryDomainService,
     )
     {
     }
 
     /**
      * @throws NotWorkEntryOpenException
-     * @throws UnauthorizedAccessToWorkEntry
      * @throws EntityNotFoundException
      */
-    public function execute($userId): void
+    public function execute($userId): WorkEntry
     {
         $user = $this->getUserByIdUseCase->execute($userId);
 
@@ -40,10 +39,10 @@ final readonly class CloseWorkEntryUseCase
             throw new NotWorkEntryOpenException('No work entry open');
         }
 
-        $this->workEntryDomainService->canAccessToWorkEntry($user, $workEntry);
-
         $workEntry->close();
         $this->workEntryWriteRepository->save($workEntry);
+
+        return $workEntry;
 
     }
 }

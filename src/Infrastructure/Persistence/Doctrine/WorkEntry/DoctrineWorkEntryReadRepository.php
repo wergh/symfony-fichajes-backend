@@ -90,9 +90,11 @@ readonly class DoctrineWorkEntryReadRepository implements WorkEntryReadRepositor
             ->select('w')
             ->from(WorkEntry::class, 'w')
             ->where('w.user = :userId')
-            ->andWhere('w.startDate >= :startOfDay')
-            ->andWhere('w.startDate <= :endOfDay')
             ->andWhere('w.deletedAt IS NULL')
+            ->andWhere('(
+                (w.startDate >= :startOfDay AND w.startDate <= :endOfDay) OR
+                (w.startDate <= :startOfDay AND (w.endDate IS NULL OR (w.endDate >= :startOfDay AND w.endDate <= :endOfDay)))
+            )')
             ->setParameter('userId', $userId)
             ->setParameter('startOfDay', (new \DateTimeImmutable('today'))->setTime(0, 0))
             ->setParameter('endOfDay', (new \DateTimeImmutable('tomorrow'))->setTime(0, 0)->modify('-1 second'))

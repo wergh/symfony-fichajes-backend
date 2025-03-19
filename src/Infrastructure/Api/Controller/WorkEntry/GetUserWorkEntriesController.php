@@ -22,7 +22,6 @@ class GetUserWorkEntriesController extends AbstractController
     public function __construct(
         private readonly GetUserWorkEntriesUseCase $getUserWorkEntriesUseCase,
         private readonly WorkEntryDtoMapper $workEntryDtoMapper,
-        private readonly SerializerInterface $serializer
     )
     {
     }
@@ -38,16 +37,15 @@ class GetUserWorkEntriesController extends AbstractController
             //En un caso real utilizaríamos el Token para obtener el userId no lo pasaríamos como argumento
             $workEntries = $this->getUserWorkEntriesUseCase->execute($userId);
         } catch (EntityNotFoundException $e) {
-            return new JsonResponse(['errors' => $e->getMessage()], Response::HTTP_NOT_FOUND);
+            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
         }
 
         $workEntriesDTO = array_map(fn($workEntry) => $this->workEntryDtoMapper->toDTO($workEntry), $workEntries->toArray());
 
         return new JsonResponse(
-            $this->serializer->serialize($workEntriesDTO, 'json'),
+            ['message' => 'WorkEntries retrieved successfully', 'data' => $workEntriesDTO],
             Response::HTTP_OK,
-            [],
-            true
         );
+
     }
 }

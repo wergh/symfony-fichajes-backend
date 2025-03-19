@@ -5,6 +5,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Api\Controller\WorkEntry;
 
+use App\Application\Mapper\WorkEntry\WorkEntryDtoMapper;
 use App\Application\UseCase\WorkEntry\CloseWorkEntryUseCase;
 use App\Domain\Shared\Exceptions\EntityNotFoundException;
 use App\Domain\WorkEntry\Exception\NotWorkEntryOpenException;
@@ -21,6 +22,7 @@ class CloseWorkEntryController extends AbstractController
 
     public function __construct(
         private readonly CloseWorkEntryUseCase $closeWorkEntryUseCase,
+        private readonly WorkEntryDtoMapper    $workEntryDtoMapper
     )
     {
     }
@@ -29,13 +31,12 @@ class CloseWorkEntryController extends AbstractController
     public function _invoke(string $userId): JsonResponse
     {
         try {
-            $this->closeWorkEntryUseCase->execute($userId);
+            $workEntry = $this->closeWorkEntryUseCase->execute($userId);
         } catch (EntityNotFoundException|NotWorkEntryOpenException $e) {
-            return new JsonResponse(['errors' => $e->getMessage()], Response::HTTP_NOT_FOUND);
-        } catch (UnauthorizedAccessToWorkEntry $e) {
-            return new JsonResponse(['errors' => $e->getMessage()], Response::HTTP_UNAUTHORIZED);
+            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
         }
 
-        return new JsonResponse(['message' => 'Work Entry closed successfully'], Response::HTTP_OK);
+        $workEntryDto = $this->workEntryDtoMapper->toDTO($workEntry);
+        return new JsonResponse(['message' => 'Work Entry closed successfully', 'data' => $workEntryDto], Response::HTTP_OK);
     }
 }

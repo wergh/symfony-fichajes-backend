@@ -11,7 +11,7 @@ class WorkEntryDto
 {
     public function __construct(
         public readonly string $id,
-        public readonly DateTimeImmutable $startDate,
-        public readonly ?DateTimeImmutable $endDate,
+        public readonly string $startDate,
+        public readonly ?string $endDate,
     ) {}
 }

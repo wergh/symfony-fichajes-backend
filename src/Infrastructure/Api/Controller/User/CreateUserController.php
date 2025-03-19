@@ -40,17 +40,17 @@ class CreateUserController extends AbstractController
 
         $errors = $this->validator->validate($createUserRequest);
         if (count($errors) > 0) {
-            return new JsonResponse(['errors' => (string) $errors], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(['message' => (string) $errors], Response::HTTP_BAD_REQUEST);
         }
 
         try {
             $command = new CreateUserCommand($createUserRequest->getName());
             $user = $this->createUserUseCase->execute($command);
         } catch (ValidationFailedException $e) {
-            return new JsonResponse(['errors' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         }
 
-        $userDTO = $this->userDtoMapper->toDTO($user, '00:00:00');
+        $userDTO = $this->userDtoMapper->toDTO($user);
 
         return new JsonResponse(['message' => 'User created successfully', 'data' => $userDTO], Response::HTTP_CREATED);
     }

@@ -33,7 +33,7 @@ final class CreateWorkEntryUseCase
      * @throws WorkEntryAlreadyOpenException
      * @throws EntityNotFoundException
      */
-    public function execute(CreateWorkEntryCommand $command): void
+    public function execute(CreateWorkEntryCommand $command): WorkEntry
     {
         $this->validator->validate($command);
         $user = $this->getUserByIdUseCase->execute($command->getUserId());
@@ -47,5 +47,6 @@ final class CreateWorkEntryUseCase
         );
 
         $this->workEntryWriteRepository->save($workEntry);
+        return $workEntry;
     }
 }

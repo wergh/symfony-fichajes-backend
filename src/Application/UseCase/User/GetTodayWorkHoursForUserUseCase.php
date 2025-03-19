@@ -18,15 +18,16 @@ final readonly class GetTodayWorkHoursForUserUseCase
     {
     }
 
-    public function execute(User $user): string
+    public function execute(User $user): int
     {
         $workEntries = $this->workEntryReadRepository->getWorkEntriesForToday((string) $user->getId());
+
 
         return $this->calculateWorkHoursForToday($workEntries);
 
     }
 
-    private function calculateWorkHoursForToday(array $workEntries): string
+    private function calculateWorkHoursForToday(array $workEntries): int
     {
         $now = new DateTimeImmutable('now');
         $startOfDay = (new DateTimeImmutable('today'))->setTime(0, 0);
@@ -48,13 +49,7 @@ final readonly class GetTodayWorkHoursForUserUseCase
 
             $totalSeconds += $endDate->getTimestamp() - $startDate->getTimestamp();
         }
-
-
-        $hours = str_pad((string)floor($totalSeconds / 3600), 2, '0', STR_PAD_LEFT);
-        $minutes = str_pad((string)floor(($totalSeconds % 3600) / 60), 2, '0', STR_PAD_LEFT);
-        $seconds = str_pad((string)($totalSeconds % 60), 2, '0', STR_PAD_LEFT);
-
-        return "{$hours}:{$minutes}:{$seconds}";
+        return $totalSeconds;
 
     }
 }

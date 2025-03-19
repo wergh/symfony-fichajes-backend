@@ -8,6 +8,7 @@ use App\Application\Command\WorkEntry\UpdateWorkEntryCommand;
 use App\Application\Validator\WorkEntry\UpdateWorkEntryValidatorInterface;
 use App\Domain\Shared\Exceptions\EntityNotFoundException;
 use App\Domain\User\Exception\EndDateInTheFutureNotAllowed;
+use App\Domain\WorkEntry\Entity\WorkEntry;
 use App\Domain\WorkEntry\Exception\NotOverlapException;
 use App\Domain\WorkEntry\Exception\UnauthorizedAccessToWorkEntry;
 use App\Domain\WorkEntry\Exception\WorkEntryIsAlreadyOpenException;
@@ -21,7 +22,7 @@ final readonly class UpdateWorkEntryUseCase
     public function __construct(
         private GetWorkEntryByIdUseCase           $getWorkEntryByIdUseCase,
         private WorkEntryWriteRepositoryInterface $workEntryWriteRepository,
-        private WorkEntryReadRepositoryInterface $workEntryReadRepository,
+        private WorkEntryReadRepositoryInterface  $workEntryReadRepository,
         private UpdateWorkEntryValidatorInterface $validator,
         private MessageBusInterface               $eventBus
     )
@@ -36,7 +37,7 @@ final readonly class UpdateWorkEntryUseCase
      * @throws NotOverlapException
      * @throws EndDateInTheFutureNotAllowed
      */
-    public function execute(UpdateWorkEntryCommand $command): void
+    public function execute(UpdateWorkEntryCommand $command): WorkEntry
     {
         $this->validator->validate($command);
 
@@ -57,6 +58,8 @@ final readonly class UpdateWorkEntryUseCase
         foreach ($workEntry->releaseEvents() as $event) {
             $this->eventBus->dispatch($event);
         }
+
+        return $workEntry;
     }
 
 }

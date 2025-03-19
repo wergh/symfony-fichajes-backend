@@ -20,20 +20,19 @@ class GetUsersController extends AbstractController
     public function __construct(
         private readonly GetUsersUseCase $getUsersUseCase,
         private readonly UserListDtoMapper $userDTOMapper,
-        private readonly SerializerInterface $serializer
     ) {}
 
     #[Route('/users', methods: ['GET'])]
     public function __invoke(): JsonResponse
     {
-        $users = $this->getUsersUseCase->execute();
-        $usersDTO = array_map(fn($user) => $this->userDTOMapper->toDTO($user), $users);
+        try {
+            $users = $this->getUsersUseCase->execute();
+            $usersDTO = array_map(fn($user) => $this->userDTOMapper->toDTO($user), $users);
+        } catch (\Exception $e) {
+            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
 
-        return new JsonResponse(
-            $this->serializer->serialize($usersDTO, 'json'),
-            Response::HTTP_OK,
-            [],
-            true
-        );
+        return new JsonResponse(['message' => 'Users retrieved successfully', 'data' => $usersDTO], Response::HTTP_CREATED);
+
     }
 }

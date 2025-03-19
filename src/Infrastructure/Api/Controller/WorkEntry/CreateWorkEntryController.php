@@ -6,7 +6,9 @@ declare(strict_types=1);
 namespace App\Infrastructure\Api\Controller\WorkEntry;
 
 use App\Application\Command\WorkEntry\CreateWorkEntryCommand;
+use App\Application\Mapper\WorkEntry\WorkEntryDtoMapper;
 use App\Application\UseCase\WorkEntry\CreateWorkEntryUseCase;
+use App\Domain\Shared\Exceptions\EntityNotFoundException;
 use App\Domain\User\Exception\WorkEntryAlreadyOpenException;
 use App\Infrastructure\Api\Request\WorkEntry\CreateWorkEntryRequest;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -27,6 +29,7 @@ class CreateWorkEntryController extends AbstractController
         private readonly CreateWorkEntryUseCase $createWorkEntryUseCase,
         private readonly SerializerInterface    $serializer,
         private readonly ValidatorInterface     $validator,
+        private readonly WorkEntryDtoMapper     $workEntryDtoMapper
     )
     {
     }
@@ -42,19 +45,23 @@ class CreateWorkEntryController extends AbstractController
 
         $errors = $this->validator->validate($createWorkEntryRequest);
         if (count($errors) > 0) {
-            return new JsonResponse(['errors' => (string) $errors], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(['message' => (string)$errors], Response::HTTP_BAD_REQUEST);
         }
 
         try {
             $command = new CreateWorkEntryCommand($createWorkEntryRequest->getUserId());
-            $this->createWorkEntryUseCase->execute($command);
+            $workEntry = $this->createWorkEntryUseCase->execute($command);
         } catch (ValidationFailedException $e) {
-            return new JsonResponse(['errors' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         } catch (WorkEntryAlreadyOpenException $e) {
-            return new JsonResponse(['errors' => $e->getMessage()], Response::HTTP_CONFLICT);
+            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_CONFLICT);
+        } catch (EntityNotFoundException $e) {
+            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
         }
 
-        return new JsonResponse(['message' => 'Work entry created successfully'], Response::HTTP_CREATED);
+        $workEntryDto = $this->workEntryDtoMapper->toDTO($workEntry);
+
+        return new JsonResponse(['message' => 'Work entry created successfully', 'data' => $workEntryDto], Response::HTTP_CREATED);
 
     }
 }
